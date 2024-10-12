@@ -74,6 +74,20 @@ export const fakeUsers = {
         'Michigan'
       ];
 
+      const medical_conditions = [
+        'Diabetes',
+        'Hypertension',
+        'Arthritis',
+        'Asthma',
+        'Depression',
+        'Epilepsy'
+      ];
+
+      const date_of_birth = faker.date
+        .between({ from: '1980-01-01', to: '2000-01-01' })
+        .toISOString()
+        .split('T')[0];
+
       return {
         id,
         first_name: faker.person.firstName(),
@@ -92,10 +106,9 @@ export const fakeUsers = {
         longitude: faker.location.longitude(),
         latitude: faker.location.latitude(),
         gender: faker.helpers.arrayElement(genders) as Gender,
-        date_of_birth: faker.date
-          .between({ from: '1980-01-01', to: '2000-01-01' })
-          .toISOString()
-          .split('T')[0],
+        date_of_birth: date_of_birth,
+        age: new Date().getFullYear() - parseInt(date_of_birth.split('-')[0]),
+        medical_condition: faker.helpers.arrayElement(medical_conditions),
         job: faker.helpers.arrayElement(jobs),
         profile_picture: `https://api.slingacademy.com/public/sample-users/${id}.png`
       };

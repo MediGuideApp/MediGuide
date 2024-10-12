@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 const breadcrumbItems = [
   { title: 'Dashboard', link: '/dashboard' },
-  { title: 'Employee', link: '/dashboard/employee' }
+  { title: 'Patients', link: '/dashboard/patient' }
 ];
 
 type TEmployeeListingPage = {};
@@ -44,8 +44,8 @@ export default async function EmployeeListingPage({}: TEmployeeListingPage) {
 
         <div className="flex items-start justify-between">
           <Heading
-            title={`Employee (${totalUsers})`}
-            description="Manage employees (Server side table functionalities.)"
+            title={`Patients (${totalUsers})`}
+            description="Manage patients"
           />
 
           <Link
