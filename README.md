@@ -58,3 +58,7 @@ Follow these steps to clone the repository and start the development server:
 - `npm run dev`
 
 You should now be able to access the application at http://localhost:3000.
+
+## For Database
+
+- `npm exec prisma migrate dev` and select yes to overwrite data
