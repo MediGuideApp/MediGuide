@@ -32,27 +32,38 @@ class Reminder:
         # Check if the request was successful and print the response
         if response.status_code == 201:
             print('Call created successfully')
+            patient.doses_taken += 1
             self.call_id = response.json()['id']
+            print(self._get_analysis(self.call_id))
             return self.call_id
         else:
             print('Failed to create call')
             print(response.text)
 
+    def save_patient_data(self, patient):
+        # Save the patient data to a database
+        pass
+
     def _call_url(self):
         return f'{self.api_url}/phone'
 
     def _get_analysis(self, call_id):
-        # query call by call_id
-        response = requests.request("GET", f'{self.api_url}', headers=self._headers())
-        for call in response.json():
-            if call.get('id') == call_id:
-                analysis = call.get('analysis')
-                if analysis:
-                    return analysis.get('successEvaluation')
-                else:
-                    print('No analysis found')
-                    return None
+        while requests.request("GET", f'{self.api_url}/{call_id}', headers=self._headers()).json()['status'] != 'ended':
+            time.sleep(3)
+        final_request = requests.request("GET", f'{self.api_url}/{call_id}', headers=self._headers())
+        analysis = final_request.json().get('analysis')
+        if analysis:
+            evaluation = analysis.get('successEvaluation')
+            if evaluation:
+                self._update_patient_adherance(evaluation, patient)
+                return evaluation
 
+    def _update_patient_adherance(evaluation, patient):
+        if evaluation == 'true':
+            patient.doses_taken += 1
+            print(f'Patient has taken their medication.')
+        else:
+            print(f'Patient has not taken their medication.')
 
     def _current_time(self):
         return datetime.now().strftime("%H:%M")
@@ -93,3 +104,21 @@ class Reminder:
                 'number': patient.phone_number,
             },
         }
+
+example_patient = {
+    "id": "1",
+    "first_name": "John",
+    "last_name": "Doe",
+    "gender": "male",
+    "phone_number": "+19173876165",
+    "medical_conditions": ["hypertension", "diabetes"],
+    "medications": [
+        {"name": "Metformin", "dosage": "500mg", "time": "08:00"},
+        {"name": "Lisinopril", "dosage": "10mg", "time": "12:00"},
+        {"name": "Atorvastatin", "dosage": "20mg", "time": "20:00"},
+    ],
+    "total_doses": 3,
+    "doses_taken": 2}
+reminder = Reminder()
+patient = Patient(example_patient)
+reminder.request(patient)
