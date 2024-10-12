@@ -129,17 +129,17 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'Employee',
+    title: 'Patients',
     href: '/dashboard/employee',
     icon: 'user',
     label: 'employee'
   },
-  {
-    title: 'Product',
-    href: '/dashboard/product',
-    icon: 'product',
-    label: 'product'
-  },
+  // {
+  //   title: 'Product',
+  //   href: '/dashboard/product',
+  //   icon: 'product',
+  //   label: 'product'
+  // },
   {
     title: 'Account',
     icon: 'user',
@@ -158,11 +158,11 @@ export const navItems: NavItem[] = [
         label: 'login'
       }
     ]
-  },
-  {
-    title: 'Kanban',
-    href: '/dashboard/kanban',
-    icon: 'kanban',
-    label: 'kanban'
   }
+  // {
+  //   title: 'Kanban',
+  //   href: '/dashboard/kanban',
+  //   icon: 'kanban',
+  //   label: 'kanban'
+  // }
 ];
