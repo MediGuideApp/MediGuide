@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/date-picker';
 import {
   Form,
   FormControl,
@@ -28,12 +29,21 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: 'Name must be at least 2 characters.'
   }),
-  country: z.string({
-    required_error: 'Please select a country.'
+  medical_condition: z.string().min(1, {
+    message: 'Please enter a valid medical condition.'
   }),
-  email: z.string().email({
-    message: 'Please enter a valid email address.'
-  }),
+  date_of_birth: z
+    .date({
+      required_error: 'Please enter a valid date of birth.',
+      invalid_type_error: 'Invalid date format.'
+    })
+    .refine((date) => date <= new Date(), {
+      message: 'Date of birth cannot be in the future.'
+    }),
+  phone: z
+    .string()
+    .min(10, { message: 'Phone number must be at least 10 digits.' })
+    .regex(/^\d+$/, { message: 'Phone number must contain only digits.' }),
   company: z.string().min(1, {
     message: 'Company name is required.'
   }),
@@ -47,7 +57,7 @@ export default function EmployeeForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      country: '',
+      medical_condition: '',
       email: '',
       company: '',
       gender: undefined
@@ -62,7 +72,7 @@ export default function EmployeeForm() {
     <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-left text-2xl font-bold">
-          Employee Information
+          Patient Information
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -76,7 +86,7 @@ export default function EmployeeForm() {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your name" {...field} />
+                      <Input placeholder="Enter patient's name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -84,42 +94,31 @@ export default function EmployeeForm() {
               />
               <FormField
                 control={form.control}
-                name="country"
+                name="medical_condition"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a country" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="usa">USA</SelectItem>
-                        <SelectItem value="uk">UK</SelectItem>
-                        <SelectItem value="canada">Canada</SelectItem>
-                        <SelectItem value="australia">Australia</SelectItem>
-                        <SelectItem value="germany">Germany</SelectItem>
-                        <SelectItem value="france">France</SelectItem>
-                        <SelectItem value="japan">Japan</SelectItem>
-                        <SelectItem value="brazil">Brazil</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Medical Condition</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter the medical condition"
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {/* date of birth picker with datepicker on a newline below the form label*/}
               <FormField
                 control={form.control}
-                name="email"
+                name="date_of_birth"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="block">Date of Birth</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        {...field}
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
@@ -128,12 +127,16 @@ export default function EmployeeForm() {
               />
               <FormField
                 control={form.control}
-                name="company"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company</FormLabel>
+                    <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your company" {...field} />
+                      <Input
+                        type="phone"
+                        placeholder="Enter patient's phone number"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
