@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Employee } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
@@ -47,6 +48,10 @@ export const columns: ColumnDef<Employee>[] = [
   {
     accessorKey: 'phone',
     header: 'PHONE'
+  },
+  {
+    id: 'prescription',
+    cell: ({ row }) => <Button variant="outline">Prescription</Button>
   },
   {
     id: 'actions',
