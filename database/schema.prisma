@@ -8,21 +8,25 @@ datasource db {
 }
 
 model Patient {
-    id            String         @id @default(uuid())
-    name          String
-    age           Int
-    phoneNumber   String
-    prescriptions Prescription[] @relation("PatientPrescriptions")
+    id                String        @id @default(uuid())
+    firstName         String
+    lastName          String
+    gender            String
+    phoneNumber       String
+    medicalConditions String[]
+    medications       Medications[] @relation("PatientMedications")
+    totalDoses        Int
+    dosesTaken        Int
 }
 
-model Prescription {
-    id           String   @id @default(uuid())
-    patientId    String
-    medication   String
-    dosage       String
-    reminderTime DateTime
-    mode         Mode
-    patient      Patient  @relation(fields: [patientId], references: [id], name: "PatientPrescriptions")
+model Medications {
+    id        String   @id @default(uuid())
+    patientId String
+    name      String
+    dosage    String
+    time      String[]
+    mode      Mode
+    patient   Patient  @relation(fields: [patientId], references: [id], name: "PatientMedications")
 }
 
 enum Mode {
