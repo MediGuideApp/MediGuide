@@ -4,7 +4,7 @@ import EmployeeForm from '../employee-form';
 
 const breadcrumbItems = [
   { title: 'Dashboard', link: '/dashboard' },
-  { title: 'Employee', link: '/dashboard/employee' },
+  { title: 'Patients', link: '/dashboard/employee' },
   { title: 'Create', link: '/dashboard/employee/create' }
 ];
 
