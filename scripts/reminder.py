@@ -1,7 +1,6 @@
 import requests
 import time
 from datetime import datetime
-
 class Patient:
     def __init__(self, data):
         self.id = data["id"]
@@ -19,22 +18,40 @@ class Patient:
 
 class Reminder:
     def __init__(self):
-        self.context = f"You are an automated medication reminder bot, scheduled to remind your patient the appropriate dosage at the correct times of the day.\nYour job is to inform your patient about the drug that they have to consume and the quantity, and ensure that they affirm that they have consumed their medication.\nThe current time is {self._current_time}, instruct the patient on what medication to consume. Your patient may have memory difficulty so be patient with making sure they understand the reminder. \nOnce the customer acknowledges the reminder, say \"Please let me know when you have consumed your medication\".\nProceed to wait for 10 seconds for the customer to consume their medication.\nThen, ask the customer to say the exact words\"I have consumed my medication\". Only after receiving this confirmation, end the call after saying \"Thank you for consuming your medication!\".\n"
-        self.phone_number_id = '417c707c-8128-4fa3-b647-1021bfed7cbf'
+        self.context = f"You are an automated medication reminder bot, scheduled to remind your patient the appropriate dosage at the correct times of the day.\nYour job is to inform your patient about the drug that they have to consume and the quantity, and ensure that they affirm that they have consumed their medication.\nThe current time is {self._current_time}, instruct the patient on what medication to consume. Your patient may have memory difficulty so be patient with making sure they understand the reminder. \nOnce the customer acknowledges the reminder, say \"Please let me know when you have consumed your medication\".\nProceed to wait for 10 seconds for the customer to consume their medication.\n Upon receiving confirmation that they have consumed their medication, end the call immediately.\n"
+        self.phone_number_id = '79502138-40a6-45d6-8e7e-25f76f37ac37'
         self.auth_token = 'ca979fc4-5476-407a-b8d2-73582ed4f285' # Your Vapi API Authorization token
+        self.api_url = 'https://api.vapi.ai/call'
+        self.call_id = None
     
     def request(self, patient):
         # Make the POST request to Vapi to create the phone call
         response = requests.request("POST",
-            'https://api.vapi.ai/call/phone', headers=self.headers, json=self._payload(patient))
+            self._call_url(), headers=self._headers(), json=self._payload(patient))
 
         # Check if the request was successful and print the response
         if response.status_code == 201:
             print('Call created successfully')
-            print(response.json())
+            self.call_id = response.json()['id']
+            return self.call_id
         else:
             print('Failed to create call')
             print(response.text)
+
+    def _call_url(self):
+        return f'{self.api_url}/phone'
+
+    def _get_analysis(self, call_id):
+        # query call by call_id
+        response = requests.request("GET", f'{self.api_url}', headers=self._headers())
+        for call in response.json():
+            if call.get('id') == call_id:
+                analysis = call.get('analysis')
+                if analysis:
+                    return analysis.get('successEvaluation')
+                else:
+                    print('No analysis found')
+                    return None
 
 
     def _current_time(self):
@@ -60,7 +77,7 @@ class Reminder:
                         }
                     ]
                 },
-                "voice": "asteria-deepgram",
+                "voice": "luna-deepgram",
                 "firstMessageMode": "assistant-speaks-first",
                 "endCallFunctionEnabled": True,
                 "endCallMessage": "Thank you for your response, goodbye!",
@@ -76,5 +93,3 @@ class Reminder:
                 'number': patient.phone_number,
             },
         }
-
-# need to test for response

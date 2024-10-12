@@ -1,30 +1,7 @@
-from vapi3 import Patient, Reminder
+from scripts.reminder import Patient, Reminder
 import time
 import schedule
 # parse a json file of patient reminders
-example_patient_data = {
-    "id": 1,
-    "first_name": "John",
-    "last_name": "Doe",
-    "gender": "male",
-    "phone_number": "1234567890",
-    "medical_conditions": ["diabetes", "hypertension"],
-    "medications": [
-        {
-            "name": "Metformin",
-            "dosage": "500mg",
-            "time": "08:00, 20:00"
-        },
-        {
-            "name": "Lisinopril",
-            "dosage": "10mg",
-            "time": "08:00"
-        }
-    ],
-    "total_doses": 3,
-    "doses_taken": 1
-}
-example_times = ["08:00", "20:00"]
 
 class ReminderScheduler:
     def __init__(self, patient_data) -> None:
@@ -38,6 +15,9 @@ class ReminderScheduler:
     def schedule_reminders(self, times):
         for time in times:
             self._schedule_daily_reminder(time)
+
+    def demo_reminder(self):
+        self._reminder_job()
 
     def _schedule_daily_reminder(self, time):
         try:
@@ -55,7 +35,3 @@ class ReminderScheduler:
     def _reminder_job(self):
         reminder = Reminder()
         reminder.request(self.patient)
-
-scheduler = ReminderScheduler(example_patient_data)
-scheduler.schedule_reminders(example_times)
-scheduler.cancel_reminders()
