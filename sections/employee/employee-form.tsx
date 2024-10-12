@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -15,15 +16,11 @@ import {
   FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { PatientData } from '@/types/patient';
+import { savePatient } from '@/lib/patientData';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -44,28 +41,60 @@ const formSchema = z.object({
     .string()
     .min(10, { message: 'Phone number must be at least 10 digits.' })
     .regex(/^\d+$/, { message: 'Phone number must contain only digits.' }),
-  company: z.string().min(1, {
-    message: 'Company name is required.'
-  }),
-  gender: z.enum(['male', 'female', 'other'], {
+  gender: z.enum(['Male', 'Female', 'Other'], {
     required_error: 'Please select a gender.'
   })
 });
 
 export default function EmployeeForm() {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
+      date_of_birth: undefined,
       medical_condition: '',
-      email: '',
-      company: '',
+      phone: '',
       gender: undefined
     }
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  function calculateAge(dateOfBirth: Date): number {
+    const diff = new Date().getTime() - new Date(dateOfBirth).getTime();
+    const ageDate = new Date(diff);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+  }
+
+  async function savePatientData(values: z.infer<typeof formSchema>) {
+    try {
+      console.log('Form submitted with values:', values);
+
+      const medicalConditionsArray = values.medical_condition
+        .split(',')
+        .map((condition) => condition.trim());
+
+      const patientData: PatientData = {
+        id: uuidv4(),
+        fullname: values.name,
+        gender: values.gender,
+        age: calculateAge(values.date_of_birth),
+        phoneNumber: values.phone,
+        medicalConditions: medicalConditionsArray
+      };
+
+      console.log('Saving patient data:', patientData);
+      await savePatient(patientData);
+      console.log('Patient data saved successfully');
+
+      // Optionally, reset the form or show a success message
+      form.reset();
+      router.push('/dashboard/employee');
+      // You might want to add some UI feedback here, like a toast notification
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      // Handle the error, maybe show an error message to the user
+    }
   }
 
   return (
@@ -77,7 +106,10 @@ export default function EmployeeForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            onSubmit={form.handleSubmit(savePatientData)}
+            className="space-y-8"
+          >
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
@@ -157,19 +189,19 @@ export default function EmployeeForm() {
                     >
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
-                          <RadioGroupItem value="male" />
+                          <RadioGroupItem value="Male" />
                         </FormControl>
                         <FormLabel className="font-normal">Male</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
-                          <RadioGroupItem value="female" />
+                          <RadioGroupItem value="Female" />
                         </FormControl>
                         <FormLabel className="font-normal">Female</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
-                          <RadioGroupItem value="other" />
+                          <RadioGroupItem value="Other" />
                         </FormControl>
                         <FormLabel className="font-normal">Other</FormLabel>
                       </FormItem>

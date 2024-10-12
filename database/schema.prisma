@@ -8,17 +8,18 @@ datasource db {
 }
 
 model Patient {
-    id                String        @id @default(uuid())
-    firstName         String
-    lastName          String
-    gender            String
-    phoneNumber       String
-    medicalConditions String[]
-    medications       Medications[] @relation("PatientMedications")
-    totalDoses        Int
-    dosesTaken        Int
+    id                  String        @id @default(uuid())
+    fullname            String
+    gender              String
+    age                 Int
+    phoneNumber         String
+    medicalConditions   String[]
+    medications         Medications[] @relation("PatientMedications")
+    totalDosesToConsume Int           @default(0)
+    totalConsumedDoses  Int           @default(0)
 }
 
+// should we have a totalRemindersSent for each drug?
 model Medications {
     id        String   @id @default(uuid())
     patientId String

@@ -1,11 +1,11 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Employee } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
+import { PatientData } from '@/types/patient';
 
-export const columns: ColumnDef<Employee>[] = [
+export const columns: ColumnDef<PatientData>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -26,7 +26,7 @@ export const columns: ColumnDef<Employee>[] = [
     enableHiding: false
   },
   {
-    accessorKey: 'first_name',
+    accessorKey: 'fullname',
     header: 'NAME'
   },
   {
@@ -34,19 +34,15 @@ export const columns: ColumnDef<Employee>[] = [
     header: 'AGE'
   },
   {
-    accessorKey: 'date_of_birth',
-    header: 'DATE OF BIRTH'
-  },
-  {
     accessorKey: 'gender',
     header: 'GENDER'
   },
   {
-    accessorKey: 'medical_condition',
+    accessorKey: 'medicalConditions',
     header: 'CONDITION'
   },
   {
-    accessorKey: 'phone',
+    accessorKey: 'phoneNumber',
     header: 'PHONE'
   },
   {
