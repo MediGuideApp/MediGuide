@@ -78,3 +78,7 @@
     height: 100dvh;
   }
 }
+
+.rdp-vhidden {
+  @apply hidden;
+}

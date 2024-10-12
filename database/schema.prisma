@@ -8,25 +8,26 @@ datasource db {
 }
 
 model Patient {
-    id                String        @id @default(uuid())
-    firstName         String
-    lastName          String
-    gender            String
-    phoneNumber       String
-    medicalConditions String[]
-    medications       Medications[] @relation("PatientMedications")
-    totalDoses        Int
-    dosesTaken        Int
+    id                  String        @id @default(uuid())
+    fullname            String
+    gender              String
+    age                 Int
+    phoneNumber         String
+    medicalConditions   String[]
+    medications         Prescription[] @relation("PatientPrescription")
+    totalDosesToConsume Int           @default(0)
+    totalConsumedDoses  Int           @default(0)
 }
 
-model Medications {
+// should we have a totalRemindersSent for each drug?
+model Prescription {
     id        String   @id @default(uuid())
     patientId String
     name      String
     dosage    String
     time      String[]
     mode      Mode
-    patient   Patient  @relation(fields: [patientId], references: [id], name: "PatientMedications")
+    patient   Patient  @relation(fields: [patientId], references: [id], name: "PatientPrescription")
 }
 
 enum Mode {

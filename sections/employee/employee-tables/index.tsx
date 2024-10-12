@@ -3,15 +3,15 @@
 import { DataTable } from '@/components/ui/table/data-table';
 import { DataTableResetFilter } from '@/components/ui/table/data-table-reset-filter';
 import { DataTableSearch } from '@/components/ui/table/data-table-search';
-import { Employee } from '@/constants/data';
 import { columns } from '../employee-tables/columns';
 import { useEmployeeTableFilters } from './use-employee-table-filters';
+import { PatientData } from '@/types/patient';
 
 export default function EmployeeTable({
   data,
   totalData
 }: {
-  data: Employee[];
+  data: PatientData[];
   totalData: number;
 }) {
   const {
