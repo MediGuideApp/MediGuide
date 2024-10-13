@@ -1,7 +1,6 @@
 import requests
 import time
 from datetime import datetime
-
 class Patient:
     def __init__(self, data):
         self.id = data["id"]
@@ -19,23 +18,52 @@ class Patient:
 
 class Reminder:
     def __init__(self):
-        self.context = f"You are an automated medication reminder bot, scheduled to remind your patient the appropriate dosage at the correct times of the day.\nYour job is to inform your patient about the drug that they have to consume and the quantity, and ensure that they affirm that they have consumed their medication.\nThe current time is {self._current_time}, instruct the patient on what medication to consume. Your patient may have memory difficulty so be patient with making sure they understand the reminder. \nOnce the customer acknowledges the reminder, say \"Please let me know when you have consumed your medication\".\nProceed to wait for 10 seconds for the customer to consume their medication.\nThen, ask the customer to say the exact words\"I have consumed my medication\". Only after receiving this confirmation, end the call after saying \"Thank you for consuming your medication!\".\n"
-        self.phone_number_id = '417c707c-8128-4fa3-b647-1021bfed7cbf'
+        self.context = f"You are an automated medication reminder bot, scheduled to remind your patient the appropriate dosage at the correct times of the day.\nYour job is to inform your patient about the drug that they have to consume and the quantity, and ensure that they affirm that they have consumed their medication.\nThe current time is {self._current_time}, instruct the patient on what medication to consume. Your patient may have memory difficulty so be patient with making sure they understand the reminder. \nOnce the customer acknowledges the reminder, say \"Please let me know when you have consumed your medication\".\nProceed to wait for 10 seconds for the customer to consume their medication.\n Upon receiving confirmation that they have consumed their medication, end the call immediately.\n"
+        self.phone_number_id = '79502138-40a6-45d6-8e7e-25f76f37ac37'
         self.auth_token = 'ca979fc4-5476-407a-b8d2-73582ed4f285' # Your Vapi API Authorization token
+        self.api_url = 'https://api.vapi.ai/call'
+        self.call_id = None
     
     def request(self, patient):
         # Make the POST request to Vapi to create the phone call
         response = requests.request("POST",
-            'https://api.vapi.ai/call/phone', headers=self.headers, json=self._payload(patient))
+            self._call_url(), headers=self._headers(), json=self._payload(patient))
 
         # Check if the request was successful and print the response
         if response.status_code == 201:
             print('Call created successfully')
-            print(response.json())
+            patient.doses_taken += 1
+            self.call_id = response.json()['id']
+            print(self._get_analysis(self.call_id))
+            return self.call_id
         else:
             print('Failed to create call')
             print(response.text)
 
+    def save_patient_data(self, patient):
+        # Save the patient data to a database
+        pass
+
+    def _call_url(self):
+        return f'{self.api_url}/phone'
+
+    def _get_analysis(self, call_id):
+        while requests.request("GET", f'{self.api_url}/{call_id}', headers=self._headers()).json()['status'] != 'ended':
+            time.sleep(3)
+        final_request = requests.request("GET", f'{self.api_url}/{call_id}', headers=self._headers())
+        analysis = final_request.json().get('analysis')
+        if analysis:
+            evaluation = analysis.get('successEvaluation')
+            if evaluation:
+                self._update_patient_adherance(evaluation, patient)
+                return evaluation
+
+    def _update_patient_adherance(evaluation, patient):
+        if evaluation == 'true':
+            patient.doses_taken += 1
+            print(f'Patient has taken their medication.')
+        else:
+            print(f'Patient has not taken their medication.')
 
     def _current_time(self):
         return datetime.now().strftime("%H:%M")
@@ -60,7 +88,7 @@ class Reminder:
                         }
                     ]
                 },
-                "voice": "asteria-deepgram",
+                "voice": "luna-deepgram",
                 "firstMessageMode": "assistant-speaks-first",
                 "endCallFunctionEnabled": True,
                 "endCallMessage": "Thank you for your response, goodbye!",
@@ -77,4 +105,20 @@ class Reminder:
             },
         }
 
-# need to test for response
+example_patient = {
+    "id": "1",
+    "first_name": "John",
+    "last_name": "Doe",
+    "gender": "male",
+    "phone_number": "+19173876165",
+    "medical_conditions": ["hypertension", "diabetes"],
+    "medications": [
+        {"name": "Metformin", "dosage": "500mg", "time": "08:00"},
+        {"name": "Lisinopril", "dosage": "10mg", "time": "12:00"},
+        {"name": "Atorvastatin", "dosage": "20mg", "time": "20:00"},
+    ],
+    "total_doses": 3,
+    "doses_taken": 2}
+reminder = Reminder()
+patient = Patient(example_patient)
+reminder.request(patient)
