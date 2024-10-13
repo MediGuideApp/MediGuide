@@ -1,5 +1,8 @@
 'use client';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ColumnDef } from '@tanstack/react-table';
 import { CellAction } from './cell-action';
@@ -47,7 +50,14 @@ export const columns: ColumnDef<PatientData>[] = [
   },
   {
     id: 'prescription',
-    cell: ({ row }) => <Button variant="outline">Prescription</Button>
+    cell: ({ row }) => (
+      <Link
+        href={'/dashboard/employee/prescription'}
+        className={cn(buttonVariants({ variant: 'default' }))}
+      >
+        Prescription
+      </Link>
+    )
   },
   {
     id: 'actions',

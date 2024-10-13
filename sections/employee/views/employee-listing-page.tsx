@@ -53,13 +53,6 @@ export default async function EmployeeListingPage(
           >
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Link>
-
-          <Link
-            href={'/dashboard/employee/prescription'}
-            className={cn(buttonVariants({ variant: 'default' }))}
-          >
-            Prescription
-          </Link>
         </div>
         <Separator />
         <EmployeeTable data={patients} totalData={patients.length} />
