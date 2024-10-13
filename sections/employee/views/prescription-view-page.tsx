@@ -5,7 +5,7 @@ import PrescriptionForm from '../employee-prescription';
 const breadcrumbItems = [
   { title: 'Dashboard', link: '/dashboard' },
   { title: 'Patients', link: '/dashboard/employee' },
-  { title: 'Create', link: '/dashboard/employee/create' }
+  { title: 'Prescription', link: '/dashboard/employee/prescription' }
 ];
 
 export default function PrescriptionViewPage() {
