@@ -65,11 +65,13 @@ export const columns: ColumnDef<PatientData>[] = [
     id: 'prescription',
     cell: ({ row }) => {
       const fullname = row.original.fullname;
+      const gender = row.original.gender;
+      const phoneNumber = row.original.phoneNumber;
+      const medicalConditions = row.original.medicalConditions;
       const totalConsumedDoses = row.original.totalConsumedDoses || 0;
-      const totalDosesToConsume = row.original.totalDosesToConsume || 0;
       return (
         <Link
-          href={`/dashboard/employee/prescription?fullname=${fullname}&consumedDoses=${totalConsumedDoses}&totalDosesToConsume=${totalDosesToConsume}`}
+          href={`/dashboard/employee/prescription?fullname=${fullname}&consumedDoses=${totalConsumedDoses}&gender=${gender}&phone=${phoneNumber}&conditions=${medicalConditions}`}
           className={cn(buttonVariants({ variant: 'default' }))}
         >
           Prescription

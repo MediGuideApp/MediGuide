@@ -39,8 +39,7 @@ const formSchema = z.object({
     }),
   phone: z
     .string()
-    .min(10, { message: 'Phone number must be at least 10 digits.' })
-    .regex(/^\d+$/, { message: 'Phone number must contain only digits.' }),
+    .min(10, { message: 'Phone number must be at least 10 digits.' }),
   gender: z.enum(['Male', 'Female', 'Other'], {
     required_error: 'Please select a gender.'
   })
@@ -167,6 +166,7 @@ export default function EmployeeForm() {
                       <Input
                         type="phone"
                         placeholder="Enter patient's phone number"
+                        pattern="[+0-9]+"
                         {...field}
                       />
                     </FormControl>

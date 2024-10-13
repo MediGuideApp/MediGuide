@@ -19,6 +19,45 @@ import { TimePicker12Demo } from '@/components/ui/time-picker-12h';
 import { Separator } from '@/components/ui/separator';
 import generateReminders from './generateReminders';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useSearchParams } from 'next/navigation';
+import { updatePatientDosesTakenAndPrescriptions } from '@/lib/patientData';
+import { Mode, Prescription } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+
+function convertToETTime(timeInput: Date | string, testDate?: boolean): string {
+  let dateObj: Date;
+
+  if (testDate) {
+    // Return a date 5 seconds from now
+    dateObj = new Date(Date.now() + 5000); // 5 seconds from now
+  } else {
+    if (typeof timeInput === 'string') {
+      // Assuming timeInput is in 'HH:MM' format
+      const [hours, minutes] = timeInput.split(':').map(Number);
+      const now = new Date();
+      dateObj = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours,
+        minutes
+      );
+    } else {
+      dateObj = timeInput;
+    }
+  }
+
+  // Convert dateObj to Eastern Time
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: 'America/New_York',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  };
+  const etTimeString = dateObj.toLocaleTimeString('en-US', options);
+
+  return etTimeString; // Returns 'HH:MM' format
+}
 
 function convertTimeStringToDate(timeString: string): Date {
   console.log('timeString:', timeString);
@@ -116,6 +155,19 @@ export default function PrescriptionForm() {
     { time_of_consumption: Date | undefined; reminder_mode: string }[]
   >([]);
 
+  const searchParams = useSearchParams();
+  const [patientData, setPatientData] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    setPatientData({
+      fullname: searchParams.get('fullname'),
+      consumedDoses: searchParams.get('consumedDoses'),
+      gender: searchParams.get('gender'),
+      phoneNumber: searchParams.get('phone'),
+      medicalConditions: searchParams.get('conditions')
+    });
+  }, [searchParams]);
+
   // Simulated AI response - in real case you'd use GPT API here
   const handleAiGeneration = async () => {
     setIsLoading(true);
@@ -167,10 +219,109 @@ export default function PrescriptionForm() {
       prevReminders.filter((_, i) => i !== index)
     );
   };
-  const onSubmit = (data: any) => {
-    console.log('Form Submitted:', { medication, dosage, reminders });
-    alert('Form Submitted!');
+
+  const onSubmit = async (testDate?: boolean) => {
+    const parsedReminders = reminders.map((reminder) => {
+      let timeString: string | undefined = undefined;
+
+      if (reminder.time_of_consumption) {
+        if (testDate) {
+          // For test, get the time 5 seconds from now in 'HH:MM' format
+          timeString = convertToETTime(reminder.time_of_consumption, true);
+        } else {
+          // Assuming reminder.time_of_consumption is a Date object
+          const hours = reminder.time_of_consumption
+            .getHours()
+            .toString()
+            .padStart(2, '0');
+          const minutes = reminder.time_of_consumption
+            .getMinutes()
+            .toString()
+            .padStart(2, '0');
+          timeString = convertToETTime(`${hours}:${minutes}`);
+        }
+      }
+
+      return {
+        ...reminder,
+        time_of_consumption: timeString
+      };
+    });
+
+    const prescriptionData = {
+      ...patientData,
+      medication,
+      dosage,
+      reminders: parsedReminders
+    };
+
+    console.log('Form Submitted:', prescriptionData);
+
+    try {
+      const scheduleResponse = await fetch(
+        'http://localhost:8000/api/schedule',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(prescriptionData)
+        }
+      );
+
+      if (scheduleResponse.ok) {
+        const { job_id } = await scheduleResponse.json();
+        console.log('Prescription scheduled successfully. Job ID:', job_id);
+
+        // Poll for job status
+        const result = await pollJobStatus(job_id);
+        console.log('Final result:', result);
+
+        // Access doses_taken
+        if (result.results && result.results.length > 0) {
+          const trimmedPhoneNumber = '+' + prescriptionData.phoneNumber.trim();
+          const { reminder_mode } = parsedReminders[0];
+          const allTimes = parsedReminders
+            .map((r) => r.time_of_consumption)
+            .filter((time): time is string => time !== undefined);
+          await updatePatientDosesTakenAndPrescriptions(
+            trimmedPhoneNumber,
+            result.results[0].doses_taken
+          );
+        }
+      } else {
+        console.log('Failed to schedule prescription. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting prescription:', error);
+    }
   };
+
+  async function pollJobStatus(
+    jobId: string,
+    maxAttempts = 60,
+    interval = 5000
+  ): Promise<any> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`Polling job status for ${jobId}, attempt ${attempt + 1}`);
+      const response = await fetch(
+        `http://localhost:8000/api/job_status/${jobId}`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`Job status for ${jobId}:`, result);
+        // Check if there are any results
+        if (result.results && result.results.length > 0) {
+          console.log(`Job ${jobId} has results. Stopping polling.`);
+          return result;
+        }
+      } else {
+        console.error(`Error polling job status: ${response.status}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
+    throw new Error('Job timed out');
+  }
 
   return (
     <Card className="mx-auto w-full">
@@ -216,7 +367,7 @@ export default function PrescriptionForm() {
               </Button>
             </div>
           )}
-          <form onSubmit={onSubmit} className="w-full">
+          <form className="w-full">
             <Card className="flex flex-col gap-8 p-8">
               <div className="flex flex-row gap-4">
                 <div className="w-[30svw]">
@@ -287,13 +438,18 @@ export default function PrescriptionForm() {
             <div className="mt-4 flex flex-col items-end">
               <div className="flex flex-row gap-4">
                 <Button
-                  type="submit"
+                  type="button"
                   className="gap-2 bg-emerald-500 text-white hover:bg-emerald-400"
+                  onClick={() => onSubmit(true)}
                 >
                   <IoCallSharp />
                   Test Call
                 </Button>
-                <Button type="submit" className="gap-2">
+                <Button
+                  type="button"
+                  className="gap-2"
+                  onClick={() => onSubmit()}
+                >
                   <MdSchedule />
                   Schedule
                 </Button>

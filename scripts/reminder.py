@@ -5,34 +5,22 @@ import pytz
 
 class Patient:
     def __init__(self, data):
-        full_name = data["full_name"].split()
+        full_name = data["fullname"].split()
         self.first_name = full_name[0]
         self.last_name = full_name[1] if len(full_name) > 1 else ''
         self.gender = data["gender"]
-        self.phone_number = data["phone_number"]
-        self.medical_conditions = data["medical_conditions"]
-        self.medications = data["medications"]
-        self.doses_taken = data["doses_taken"]
-    
-    def generate_patient_data_string(self):
-        patient_data = (
-            f"Patient name: {self.first_name} {self.last_name}\n"
-            f"Gender: {self.gender}\n"
-            f"Medical conditions: {', '.join(self.medical_conditions)}\n"
-            "Medications for today:\n" +
-            '\n'.join([f"{med['name']} {med['dosage']} - {med['time']}" for med in self.medications])
-        )
-        
-        # Log the patient data to the console
-        print("Patient Data:")
-        print(patient_data)
-        
-        return patient_data
+        self.phone_number = '+' + data["phoneNumber"]
+        self.medical_conditions = data["medicalConditions"]
+        self.medications = data["medication"]
+        self.consumed_doses = int(data["consumedDoses"])
 
 class Reminder:
-    def __init__(self):
+    def __init__(self, data):
+        self.reminders = data.get('reminders', [])
         self.context = f"""
             You are an automated medication reminder bot, scheduled to remind your patient the appropriate dosage at the correct times of the day.
+
+            Given this patient data: {data},
 
             Your job is to:
             1. Inform your patient about the drug they have to consume and the quantity
@@ -53,8 +41,8 @@ class Reminder:
             - End the call
 
             """
-        self.phone_number_id = '268a6ae6-41ff-43f9-87df-2aab78720327'
-        self.auth_token = 'fadf3ce3-ef62-4d84-b11d-91634dc48ac6' # Your Vapi API Authorization token
+        self.phone_number_id = '79502138-40a6-45d6-8e7e-25f76f37ac37'
+        self.auth_token = 'ca979fc4-5476-407a-b8d2-73582ed4f285'
         self.api_url = 'https://api.vapi.ai/call'
         self.call_id = None
     
@@ -66,7 +54,6 @@ class Reminder:
         # Check if the request was successful and print the response and returns to next app
         if response.status_code == 201:
             print('Call created successfully')
-            patient.doses_taken += 1
             print(response.json())
             self.call_id = response.json()['id']
             evaluation = self._get_analysis(self.call_id, patient)
@@ -74,12 +61,12 @@ class Reminder:
             print({
                 'call_id': self.call_id,
                 'evaluation': evaluation,
-                'doses_taken': patient.doses_taken
+                'doses_taken': patient.consumed_doses
             })
             return {
                 'call_id': self.call_id,
                 'evaluation': evaluation,
-                'doses_taken': patient.doses_taken
+                'doses_taken': patient.consumed_doses
             }
         else:
             print('Failed to create call')
@@ -105,12 +92,12 @@ class Reminder:
                 return evaluation
 
     def _update_patient_adherance(self, evaluation, patient):
-        print(f'Patient before taking their medication, doses taken: ${patient.doses_taken}')
+        print(f'Patient before taking their medication, doses taken: {patient.consumed_doses}')
         if evaluation == 'true':
-            patient.doses_taken += 1
-            print(f'Patient has taken their medication, doses taken: ${patient.doses_taken}')
+            patient.consumed_doses += 1
+            print(f'Patient has taken their medication, doses taken: {patient.consumed_doses}')
         else:
-            print(f'Patient has not taken their medication. Doses taken: ${patient.doses_taken}')
+            print(f'Patient has not taken their medication. Doses taken: {patient.consumed_doses}')
 
     def _current_time(self):
         timezone = pytz.timezone('America/New_York')
@@ -132,7 +119,7 @@ class Reminder:
                     "messages": [
                         {
                             "role": "system",
-                            "content": self.context + patient.generate_patient_data_string()
+                            "content": self.context
                         }
                     ]
                 },
@@ -162,8 +149,10 @@ example_patient = {
     "medication": "Insulin Lispo (Humalog)",
     "dosage": "5 units subcutaneously before each meal",
     "reminders": [
-        {"time_of_consumption": "Sat Oct 12 2024 07:00:00 GMT-0400 (Eastern Daylight Time)", "reminder_mode": "Phone Call"},
+        {"time_of_consumption": "08:00", "reminder_mode": "Phone Call"},
+        {"time_of_consumption": "12:00", "reminder_mode": "Phone Call"},
+        {"time_of_consumption": "16:00", "reminder_mode": "Phone Call"},
+        {"time_of_consumption": "22:00", "reminder_mode": "Phone Call"},
     ],
-    "total_doses": 3,
-    "doses_taken": 2
+    "consumedDoses": 2
     }
