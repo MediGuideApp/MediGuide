@@ -4,6 +4,8 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FaRegBell } from 'react-icons/fa';
+import { MdSchedule } from 'react-icons/md';
+import { IoCallSharp } from 'react-icons/io5';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -283,7 +285,19 @@ export default function PrescriptionForm() {
             </Card>
 
             <div className="mt-4 flex flex-col items-end">
-              <Button type="submit">Submit</Button>
+              <div className="flex flex-row gap-4">
+                <Button
+                  type="submit"
+                  className="gap-2 bg-emerald-500 text-white hover:bg-emerald-400"
+                >
+                  <IoCallSharp />
+                  Test Call
+                </Button>
+                <Button type="submit" className="gap-2">
+                  <MdSchedule />
+                  Schedule
+                </Button>
+              </div>
             </div>
           </form>
         </CardContent>
