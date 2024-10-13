@@ -62,3 +62,10 @@ You should now be able to access the application at http://localhost:3000.
 ## For Database
 
 - `npm exec prisma migrate dev` and select yes to overwrite data
+
+## For Flask Server setup (MacOS)
+
+- python -m venv new_env_name
+- source new_env_name/bin/activate
+- pip install -r requirements.txt
+- flask --app app run --debug --port 8000

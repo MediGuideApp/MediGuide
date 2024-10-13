@@ -49,15 +49,33 @@ export const columns: ColumnDef<PatientData>[] = [
     header: 'PHONE'
   },
   {
+    id: 'adherenceScore',
+    header: 'ADHERENCE SCORE',
+    cell: ({ row }) => {
+      const totalConsumedDoses = row.original.totalConsumedDoses || 0;
+      const totalDosesToConsume = row.original.totalDosesToConsume || 0;
+      const adherenceScore =
+        totalDosesToConsume > 0
+          ? (totalConsumedDoses / totalDosesToConsume) * 100
+          : 0;
+      return <span>{adherenceScore.toFixed(2)}%</span>; // Displaying with two decimal places
+    }
+  },
+  {
     id: 'prescription',
-    cell: ({ row }) => (
-      <Link
-        href={'/dashboard/employee/prescription'}
-        className={cn(buttonVariants({ variant: 'default' }))}
-      >
-        Prescription
-      </Link>
-    )
+    cell: ({ row }) => {
+      const fullname = row.original.fullname;
+      const totalConsumedDoses = row.original.totalConsumedDoses || 0;
+      const totalDosesToConsume = row.original.totalDosesToConsume || 0;
+      return (
+        <Link
+          href={`/dashboard/employee/prescription?fullname=${fullname}&consumedDoses=${totalConsumedDoses}&totalDosesToConsume=${totalDosesToConsume}`}
+          className={cn(buttonVariants({ variant: 'default' }))}
+        >
+          Prescription
+        </Link>
+      );
+    }
   },
   {
     id: 'actions',
