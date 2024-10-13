@@ -61,9 +61,6 @@ export default async function generateReminders(prescription: any) {
     });
 
     const functionCall = response.choices[0]?.message?.function_call;
-    console.log('Function call:', functionCall);
-    console.log('Function Call Name:', functionCall.name);
-    console.log('Function Call Arguments:', functionCall.arguments);
 
     if (functionCall && functionCall.name === 'generate_medication_reminders') {
       const functionArguments = JSON.parse(functionCall.arguments || '{}');

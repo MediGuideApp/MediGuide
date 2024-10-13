@@ -18,6 +18,27 @@ import { Separator } from '@/components/ui/separator';
 import generateReminders from './generateReminders';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+function convertTimeStringToDate(timeString: string): Date {
+  // Get the current date
+  const currentDate = new Date();
+
+  // Split the time string and extract hours, minutes, and AM/PM
+  const [time, modifier] = timeString.split(' '); // Split into ["08:00", "AM"]
+  let [hours, minutes] = time.split(':').map(Number); // Split "08:00" into hours and minutes
+
+  // Adjust hours based on AM/PM
+  if (modifier === 'PM' && hours < 12) {
+    hours += 12; // Convert PM hours (except for 12 PM, which is noon)
+  } else if (modifier === 'AM' && hours >= 12) {
+    hours = 0; // Convert 12 AM to 0 hours (midnight)
+  }
+
+  // Set the hours and minutes to the current date
+  currentDate.setHours(hours, minutes, 0, 0); // Set time on the date object (hours, minutes, seconds, milliseconds)
+
+  return currentDate;
+}
+
 // Reminder component for time of consumption and reminder mode
 function Reminder({
   reminder,
@@ -81,15 +102,17 @@ function Reminder({
 
 export default function PrescriptionForm() {
   const [prescription, setPrescription] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
   const [aiGenerated, setAiGenerated] = React.useState(false);
   const [medication, setMedication] = React.useState('');
   const [dosage, setDosage] = React.useState('');
   const [reminders, setReminders] = React.useState<
     { time_of_consumption: Date | undefined; reminder_mode: string }[]
-  >([{ time_of_consumption: undefined, reminder_mode: 'Text Message' }]);
+  >([]);
 
   // Simulated AI response - in real case you'd use GPT API here
   const handleAiGeneration = async () => {
+    setIsLoading(true);
     if (!prescription) {
       alert('Please enter a prescription.');
       return;
@@ -102,10 +125,13 @@ export default function PrescriptionForm() {
       setDosage(response.dosage);
       setReminders(
         response.reminders.map((reminder: any) => ({
-          time_of_consumption: new Date(reminder.time_of_consumption),
+          time_of_consumption: convertTimeStringToDate(
+            reminder.time_of_consumption
+          ),
           reminder_mode: reminder.reminder_mode
         }))
       );
+      setIsLoading(false);
     } catch (error) {
       console.error(
         'Error generating reminders:',
@@ -148,7 +174,7 @@ export default function PrescriptionForm() {
             Prescription
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col items-end gap-4">
           <Textarea
             id="prescription"
             name="prescription"
@@ -157,16 +183,34 @@ export default function PrescriptionForm() {
             placeholder="Enter the prescription details"
             rows={6}
           />
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAiGeneration}
-            >
-              Generate Reminders
-            </Button>
-          </div>
-          <form onSubmit={onSubmit}>
+          {isLoading ? (
+            <div role="status">
+              <svg
+                aria-hidden="true"
+                className="h-8 w-8 animate-spin fill-black text-gray-200 dark:text-gray-600"
+                viewBox="0 0 100 101"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                  fill="currentColor"
+                />
+                <path
+                  d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                  fill="currentFill"
+                />
+              </svg>
+              <span className="sr-only">Loading...</span>
+            </div>
+          ) : (
+            <div>
+              <Button type="button" onClick={handleAiGeneration}>
+                Generate Reminders
+              </Button>
+            </div>
+          )}
+          <form onSubmit={onSubmit} className="w-full">
             <Card className="flex flex-col gap-8 p-8">
               <div className="flex flex-row gap-4">
                 <div className="w-[30svw]">
@@ -215,7 +259,11 @@ export default function PrescriptionForm() {
                     Add Reminder
                   </Button>
                 </div>
-
+                {reminders.length === 0 && (
+                  <p className="text-sm text-gray-500">
+                    No reminders added yet. Please enter a prescription first.
+                  </p>
+                )}
                 {reminders.map((reminder, index) => (
                   <Reminder
                     key={index}
@@ -229,7 +277,7 @@ export default function PrescriptionForm() {
               </div>
             </Card>
 
-            <div>
+            <div className="mt-4 flex flex-col items-end">
               <Button type="submit">Submit</Button>
             </div>
           </form>
