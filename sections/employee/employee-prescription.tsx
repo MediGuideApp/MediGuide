@@ -19,6 +19,7 @@ import generateReminders from './generateReminders';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 function convertTimeStringToDate(timeString: string): Date {
+  console.log('timeString:', timeString);
   // Get the current date
   const currentDate = new Date();
 
@@ -27,14 +28,17 @@ function convertTimeStringToDate(timeString: string): Date {
   let [hours, minutes] = time.split(':').map(Number); // Split "08:00" into hours and minutes
 
   // Adjust hours based on AM/PM
-  if (modifier === 'PM' && hours < 12) {
-    hours += 12; // Convert PM hours (except for 12 PM, which is noon)
-  } else if (modifier === 'AM' && hours >= 12) {
-    hours = 0; // Convert 12 AM to 0 hours (midnight)
+  if (modifier === 'PM' && hours !== 12) {
+    // Convert PM hours (except for 12 PM, which is noon)
+    hours += 12;
+  } else if (modifier === 'AM' && hours === 12) {
+    // Convert 12 AM to 0 hours (midnight)
+    hours = 0;
   }
 
   // Set the hours and minutes to the current date
   currentDate.setHours(hours, minutes, 0, 0); // Set time on the date object (hours, minutes, seconds, milliseconds)
+  console.log('currentDate:', currentDate);
 
   return currentDate;
 }
@@ -264,6 +268,7 @@ export default function PrescriptionForm() {
                     No reminders added yet. Please enter a prescription first.
                   </p>
                 )}
+
                 {reminders.map((reminder, index) => (
                   <Reminder
                     key={index}

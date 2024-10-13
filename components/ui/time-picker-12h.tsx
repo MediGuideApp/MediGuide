@@ -1,5 +1,3 @@
-'use client';
-
 import * as React from 'react';
 import { Label } from '@/components/ui/label';
 import { TimePickerInput } from './time-picker-input';
@@ -12,12 +10,40 @@ interface TimePickerDemoProps {
 }
 
 export function TimePicker12Demo({ date, setDate }: TimePickerDemoProps) {
-  const [period, setPeriod] = React.useState<Period>('PM');
+  // Initialize the period based on the provided date
+  const [period, setPeriod] = React.useState<Period>(() => {
+    if (date) {
+      const hours = date.getHours();
+      return hours >= 12 ? 'PM' : 'AM';
+    }
+    return 'AM';
+  });
 
   const minuteRef = React.useRef<HTMLInputElement>(null);
   const hourRef = React.useRef<HTMLInputElement>(null);
   const secondRef = React.useRef<HTMLInputElement>(null);
   const periodRef = React.useRef<HTMLButtonElement>(null);
+
+  // Function to handle changes in time and period
+  const updateTime = (
+    newHours: number,
+    newMinutes: number,
+    newSeconds: number
+  ) => {
+    const newDate = new Date(date || Date.now());
+    newDate.setHours(newHours);
+    newDate.setMinutes(newMinutes);
+    newDate.setSeconds(newSeconds);
+    setDate(newDate);
+  };
+
+  // Function to update the period based on the hour
+  React.useEffect(() => {
+    if (date) {
+      const hours = date.getHours();
+      setPeriod(hours >= 12 ? 'PM' : 'AM');
+    }
+  }, [date]);
 
   return (
     <div className="flex items-start gap-2">
@@ -29,7 +55,11 @@ export function TimePicker12Demo({ date, setDate }: TimePickerDemoProps) {
           picker="12hours"
           period={period}
           date={date}
-          setDate={setDate}
+          setDate={(updatedDate) => {
+            setDate(updatedDate);
+            const hours = updatedDate.getHours();
+            setPeriod(hours >= 12 ? 'PM' : 'AM'); // Update period based on the new time
+          }}
           ref={hourRef}
           onRightFocus={() => minuteRef.current?.focus()}
         />
@@ -68,7 +98,21 @@ export function TimePicker12Demo({ date, setDate }: TimePickerDemoProps) {
         </Label>
         <TimePeriodSelect
           period={period}
-          setPeriod={setPeriod}
+          setPeriod={(newPeriod) => {
+            setPeriod(newPeriod);
+            const hours = date?.getHours() || 0;
+            let newHours = hours;
+
+            if (newPeriod === 'PM' && hours < 12) {
+              newHours += 12;
+            } else if (newPeriod === 'AM' && hours >= 12) {
+              newHours -= 12;
+            }
+
+            const minutes = date?.getMinutes() || 0;
+            const seconds = date?.getSeconds() || 0;
+            updateTime(newHours, minutes, seconds); // Update the time based on the selected period
+          }}
           date={date}
           setDate={setDate}
           ref={periodRef}
