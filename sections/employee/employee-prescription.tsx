@@ -258,16 +258,13 @@ export default function PrescriptionForm() {
     console.log('Form Submitted:', prescriptionData);
 
     try {
-      const scheduleResponse = await fetch(
-        'http://localhost:8000/api/schedule',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(prescriptionData)
-        }
-      );
+      const scheduleResponse = await fetch('http://localhost:8000/api/fast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(prescriptionData)
+      });
 
       if (scheduleResponse.ok) {
         const { job_id } = await scheduleResponse.json();

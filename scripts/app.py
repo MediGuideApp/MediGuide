@@ -16,6 +16,22 @@ scheduler.start()
 
 job_results = {}  # Store job results
 
+@app.route('/api/fast', methods=['POST'])
+def schedule_reminder_fast():
+    data = request.json
+    reminders = data.get('reminders', [])
+    
+    patient = Patient(data)
+    reminder = Reminder(data)
+    now = datetime.now()
+    reminder_datetime = now.strftime("%H:%M")
+    reminder.request(patient)
+
+    job_id = str(uuid.uuid4())  # Generate a unique job ID
+    job_results[job_id] = {'status': 'pending', 'results': []}
+
+    return jsonify({'status': 'scheduled', 'job_id': job_id}), 202
+
 @app.route('/api/schedule', methods=['POST'])
 def schedule_reminder():
     data = request.json

@@ -56,9 +56,15 @@ export const columns: ColumnDef<PatientData>[] = [
       const totalDosesToConsume = row.original.totalDosesToConsume || 0;
       const adherenceScore =
         totalDosesToConsume > 0
-          ? (totalConsumedDoses / totalDosesToConsume) * 100
-          : 0;
-      return <span>{adherenceScore.toFixed(2)}%</span>; // Displaying with two decimal places
+          ? totalConsumedDoses > 0
+            ? (totalConsumedDoses / totalDosesToConsume) * 100
+            : 0
+          : -1;
+      return (
+        <span>
+          {adherenceScore < 0 ? '-' : `${adherenceScore.toFixed(2)}%`}
+        </span>
+      );
     }
   },
   {

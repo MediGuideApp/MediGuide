@@ -123,7 +123,15 @@ class Reminder:
                         }
                     ]
                 },
-                "voice": "luna-deepgram",
+                "voice": {
+                    "provider": "11labs",
+                    "voiceId": "sarah",
+                    "stability": 0.6,
+                    "model": "eleven_turbo_v2_5",
+                    "style": 0.3,
+                    "similarityBoost": 0.8,
+                    "optimizeStreamingLatency": 2,
+                },
                 "firstMessageMode": "assistant-speaks-first",
                 "endCallFunctionEnabled": True,
                 "endCallMessage": "Thank you for your response, goodbye!",
