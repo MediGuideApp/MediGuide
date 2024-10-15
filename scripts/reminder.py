@@ -41,8 +41,8 @@ class Reminder:
             - End the call
 
             """
-        self.phone_number_id = '79502138-40a6-45d6-8e7e-25f76f37ac37'
-        self.auth_token = 'ca979fc4-5476-407a-b8d2-73582ed4f285'
+        self.phone_number_id = '' # insert your vapi phone number id here
+        self.auth_token = '' # insert your vapi private key here
         self.api_url = 'https://api.vapi.ai/call'
         self.call_id = None
     
